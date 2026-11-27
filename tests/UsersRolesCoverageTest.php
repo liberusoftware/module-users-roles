@@ -79,24 +79,29 @@ it('delegates all UserPolicy abilities to user permissions', function () {
 });
 
 it('checks roles across teams via HasUserRoles and UserRoleLookup', function () {
-    Schema::create('roles', function (Blueprint $table) {
+    config()->set([
+        'permission.table_names.roles' => 'coverage_roles',
+        'permission.table_names.model_has_roles' => 'coverage_model_has_roles',
+    ]);
+
+    Schema::create('coverage_roles', function (Blueprint $table) {
         $table->id();
         $table->string('name');
     });
 
-    Schema::create('model_has_roles', function (Blueprint $table) {
+    Schema::create('coverage_model_has_roles', function (Blueprint $table) {
         $table->unsignedBigInteger('role_id');
         $table->string('model_type');
         $table->unsignedBigInteger('model_id');
     });
 
-    $roleId = app('db')->table('roles')->insertGetId(['name' => 'super_admin']);
+    $roleId = app('db')->table('coverage_roles')->insertGetId(['name' => 'super_admin']);
 
     $user = (new User())->forceFill(['id' => 99]);
 
     expect($user->isSuperAdmin())->toBeFalse();
 
-    app('db')->table('model_has_roles')->insert([
+    app('db')->table('coverage_model_has_roles')->insert([
         'role_id' => $roleId,
         'model_type' => User::class,
         'model_id' => 99,
